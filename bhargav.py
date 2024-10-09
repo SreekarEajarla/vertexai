@@ -8,7 +8,7 @@ PROJECT_ID = "cedar-context-433909-d9"
 LOCATION = "us-central1"
 GENERATIVE_MODEL_NAME = "gemini-1.5-flash-001"
 INPUT_DIRECTORY = "pythonreview"  # Directory containing Python files
-OUTPUT_FILE = "combined_python_review_report.html"  # Output HTML file
+OUTPUT_FILE = "detailed_python_review_report.html"  # Output HTML file
 
 # Set up Google Cloud credentials and initialize Vertex AI
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GOOGLE_APPLICATION_CREDENTIALS
@@ -23,15 +23,39 @@ def read_file_content(file_path):
         return file.read()
 
 def generate_review(filename, code_content):
-    """Generates a review of the provided code using the AI model."""
+    """Generates a detailed review of the provided code using the AI model."""
     prompt = f"""
-    Hi vertexai, you are an expert in Python. Please review the following Python code:
-    - For each syntax error, provide the error type, line number, and how to fix the error.
-    - Provide the response in HTML table format with the following columns: 
+    Hi vertexai, you are an expert in Python code analysis. Please review the following Python code for various issues:
+    
+    1. **Syntax Errors**:
+        - **Identification**: Identify the exact error-causing line numbers and provide the exact syntax errors.
+        - **Explanation**: Provide a clear and concise explanation of each error.
+        - **Fix**: Suggest a specific fix for each identified error, providing only the necessary code to correct it without rewriting the entire code.
+        
+    2. **Code Bugs**:
+        - **Identification**: Identify potential logical or runtime errors in the code.
+        - **Explanation**: Provide a detailed explanation of why the identified code segment is problematic.
+        - **Fix**: Suggest the necessary code changes to fix the bugs without rewriting the entire code.
+    
+    3. **Security Vulnerabilities**:
+        - **Identification**: Highlight any potential security vulnerabilities in the code.
+        - **Explanation**: Provide a clear explanation of each identified vulnerability.
+        - **Fix**: Suggest code changes to mitigate the security risks without rewriting the entire code.
+    
+    4. **Duplicate Code**:
+        - **Identification**: Highlight sections of the code lines that are duplicated.
+        - **Suggestion**: Provide recommendations to remove redundancy without rewriting the entire code.
+    
+    5. **Code Improvement Suggestions**:
+        - **Identification**: Highlight sections of the code that can be improved (e.g., unnecessary complexity, redundant code).
+        - **Suggestion**: Provide specific points for improvement and the necessary code changes without rewriting the entire code.
+    
+    Provide the response in HTML table format for each section with the following columns:
         - Line Number
-        - Syntax Error
+        - Issue Type
+        - Explanation
         - Fix
-    - If no errors are found, write 'NA' in each column.
+        
     The Python code to review is from the file: {filename}.
     
     **Code**:
@@ -49,36 +73,68 @@ def generate_review(filename, code_content):
         )
         
         table_response = response.text.strip()
+        
+        # Log the raw response for debugging
+        print(f"Raw response for {filename}:\n{table_response}\n")
 
-        # Clean the response if headers or extra content are redundant
+        # Clean the response by removing unnecessary code block markers
         table_response = table_response.replace("```html", "").replace("```", "").strip()
 
-        # If the response contains valid error data, append it into a single table
-        if "Line Number" in table_response:
-            # Clean the repeated headers if present and extract error rows
-            table_rows = table_response.split("<thead>")[1].split("</thead>")[1].strip()
-
-            # Format the response as an HTML table with the desired order
-            table_response = f"""
-            <table border="1" style="margin-bottom: 5px; width: 100%; border-collapse: collapse;">
+        # Check if the response has the expected structure and contains the table header
+        if "| Line Number" in table_response:
+            table_response = table_response.replace("|", "").replace("---", "").replace("# Python Code Analysis", "").strip()
+            
+            # Wrap the table in proper HTML tags
+            table_html = """
+            <table border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse;">
                 <thead>
-                    <tr><th>Line Number</th><th>Syntax Error</th><th>Fix</th></tr>
+                    <tr>
+                        <th>Line Number</th>
+                        <th>Issue Type</th>
+                        <th>Explanation</th>
+                        <th>Fix</th>
+                    </tr>
                 </thead>
                 <tbody>
-                    {table_rows}
+            """
+            
+            for line in table_response.splitlines():
+                parts = line.split("  ")
+                if len(parts) == 4:  # Check if there are 4 parts (Line Number, Issue Type, Explanation, Fix)
+                    table_html += f"""
+                    <tr>
+                        <td>{parts[0].strip()}</td>
+                        <td>{parts[1].strip()}</td>
+                        <td>{parts[2].strip()}</td>
+                        <td>{parts[3].strip()}</td>
+                    </tr>
+                    """
+            
+            table_html += "</tbody></table>"
+            return table_html
+        else:
+            # If no issues were found, return a table with NA values
+            return """
+            <table border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse;">
+                <thead>
+                    <tr>
+                        <th>Line Number</th>
+                        <th>Issue Type</th>
+                        <th>Explanation</th>
+                        <th>Fix</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>NA</td>
+                        <td>NA</td>
+                        <td>NA</td>
+                        <td>NA</td>
+                    </tr>
                 </tbody>
             </table>
             """
-        else:
-            # If no errors, return a default "NA" table
-            table_response = """
-            <table border="1" style="margin-bottom: 5px;">
-                <tr><th>Line Number</th><th>Syntax Error</th><th>Fix</th></tr>
-                <tr><td colspan="3">NA</td></tr>
-            </table>
-            """
         
-        return table_response
     except Exception as e:
         return f"Error generating review: {str(e)}"
 
@@ -105,10 +161,10 @@ def main():
             try:
                 # Read content of the file and generate the review
                 code_content = read_file_content(file_path)
-                review_text = generate_review(filename, code_content)
+                review_html = generate_review(filename, code_content)
                 
                 # Add file name and review to the report
-                html_report += f"<h2>Review for {filename}</h2>{review_text}"
+                html_report += f"<h2>Review for {filename}</h2>{review_html}"
             except Exception as e:
                 html_report += f"<h2>Review for {filename} failed</h2><p>{str(e)}</p>"
     
