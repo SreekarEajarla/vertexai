@@ -28,8 +28,8 @@ def generate_review(filename, code_content):
     Hi vertexai, you are an expert in Python. Please review the following Python code:
     - For each syntax error, provide the error type, line number, and how to fix the error.
     - Provide the response in HTML table format with the following columns: 
-        - Syntax Error
         - Line Number
+        - Syntax Error
         - Fix
     - If no errors are found, write 'NA' in each column.
     The Python code to review is from the file: {filename}.
@@ -54,15 +54,15 @@ def generate_review(filename, code_content):
         table_response = table_response.replace("```html", "").replace("```", "").strip()
 
         # If the response contains valid error data, append it into a single table
-        if "Syntax Error" in table_response:
+        if "Line Number" in table_response:
             # Clean the repeated headers if present and extract error rows
             table_rows = table_response.split("<thead>")[1].split("</thead>")[1].strip()
 
-            # Format the response as an HTML table
+            # Format the response as an HTML table with the desired order
             table_response = f"""
             <table border="1" style="margin-bottom: 5px; width: 100%; border-collapse: collapse;">
                 <thead>
-                    <tr><th>Syntax Error</th><th>Line Number</th><th>Fix</th></tr>
+                    <tr><th>Line Number</th><th>Syntax Error</th><th>Fix</th></tr>
                 </thead>
                 <tbody>
                     {table_rows}
@@ -73,7 +73,7 @@ def generate_review(filename, code_content):
             # If no errors, return a default "NA" table
             table_response = """
             <table border="1" style="margin-bottom: 5px;">
-                <tr><th>Syntax Error</th><th>Line Number</th><th>Fix</th></tr>
+                <tr><th>Line Number</th><th>Syntax Error</th><th>Fix</th></tr>
                 <tr><td colspan="3">NA</td></tr>
             </table>
             """
