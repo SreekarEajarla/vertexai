@@ -5,7 +5,7 @@ import time
 
 GOOGLE_APPLICATION_CREDENTIALS = "service.json"
 PROJECT_ID = "cedar-context-433909-d9"
-LOCATION = "europe-west4"
+LOCATION = "us-central1"
 GENERATIVE_MODEL_NAME = "gemini-1.5-flash-001"
 RESPONSE_DIR = "responses/" 
 RESPONSE_FILE = os.path.join(RESPONSE_DIR, "review_summary.html") 
@@ -29,7 +29,7 @@ def add_line_numbers(code_content):
     return '\n'.join(numbered_lines)
 
 def generate_review(code_content):
-    prompt = f"""You are an intelligent python and sql code analyst. Please analyze the provided code snippet and provide the following information:
+    prompt = f"""You are an intelligent code analyst. Please analyze the provided code snippet and provide the following information:
  
 1. Syntax Errors:
     - Identification: Identify the exact error-causing line numbers and provide the exact syntax errors.
@@ -41,18 +41,18 @@ def generate_review(code_content):
     - Identification: Identify potential logical or runtime errors in the code.
     - Explanation: Provide a detailed explanation of why the identified code segment is problematic.
     - Fix: Suggest the necessary code changes to fix the bugs without rewriting the entire code.
-    - Note: If no code bugs are found, generate a table with "No Code Bugs Found" in normal font (Times New Roman).
+    - Note: If no code bugs are found, give as "No Code Bugs Found" in normal font (Times New Roman).
  
 3. Security Vulnerabilities:
     - Identification: Highlight any potential security vulnerabilities in the code (e.g., SQL injection, XSS, insecure deserialization).
     - Explanation: Provide a clear explanation of each identified vulnerability.
     - Fix: Suggest code changes to mitigate the security risks without rewriting the entire code.
-    - Note: If no security vulnerabilities are found, generate a table with "No Security Vulnerabilities Found" in normal font (Times New Roman).
+    - Note: If no security vulnerabilities are found, give as "No Security Vulnerabilities Found" in normal font (Times New Roman).
  
 4. Duplicate Code:
     - Identification: Highlight sections of the code lines that are duplicated.
     - Suggestion: Provide recommendations without rewriting the entire code.
-    - Note: If no duplicate code is found, generate a table with "No duplicate code in this file" in normal font (Times New Roman).
+    - Note: If no duplicate code is found, give as "No duplicate code in this file" in normal font (Times New Roman).
  
 5. Code Improvement Suggestions:
     - Identification: Highlight sections of the code that can be improved.
@@ -61,29 +61,22 @@ def generate_review(code_content):
         - Redundant code blocks
         - Potential for using more concise constructs (e.g., list comprehensions, loops)
     - Suggestion: Provide specific points for improvement and the necessary code changes without rewriting the entire code.
-    - Note: If no code improvement suggestions are found, generate a table with "No Code Improvement Suggestions Found" in normal font (Times New Roman).
+    - Note: If no code improvement suggestions are found, give as "No Code Improvement Suggestions Found" in normal font (Times New Roman).
  
-6. Don't write any kind of code or code snippet in the output.
+6. Do not write any code snippet in the output.
  
-7. Generate the output in a purely HTML format so that the file can be opened and displayed as a proper web page.
-    - Maintain a consistent format for all review responses.
-    - Ensure there is no "Code analysis" headings in the final output.
-    - Ensure a table is always generated for every section, even if there are no errors or suggestions.
-    - Enforce table formatting using inline attributes:
-        - The table width should always be set to 100%.
-        - Use inline HTML attributes for consistent formatting:
-            - `<table width="100%" border="1" cellpadding="8" style="border-collapse: collapse;">`
-            - For each column:
-                - `<th width="25%">Identification</th>`
-                - `<th width="50%">Explanation</th>`
-                - `<th width="25%">Fix</th>`
-            - Apply consistent borders and alignment.
-            - Ensure proper font and alignment (Times New Roman for text, left-aligned).
+7. Generate the output in purely HTML format with consistent table formatting for each section:
+    - All tables should have:
+        - Table width set to 100%.
+        - Inline HTML attributes for consistent formatting:
+            - `<table width="100%" border="1" cellpadding="8" style="border-collapse: collapse; font-family: 'Times New Roman';">`
+            - Adapt column sizes according to the text in it.
+            - Ensure the same border, font, and alignment styles are used consistently.
  
-8. Headings like Syntax Errors, Code Bugs, Security Vulnerabilities, Duplicate Code, and Code Improvement Suggestions must be bold and numbered.
-    - Ensure the content, such as "No Syntax Errors Found," is in normal font (Times New Roman).
-    - Keep headings and content in distinct fonts.
-    - Use a `-` to fill the "Explanation" and "Fix" columns when there are no issues to display.
+8. Headings like "Syntax Errors", "Code Bugs", "Security Vulnerabilities", "Duplicate Code", and "Code Improvement Suggestions" must be bold and numbered.
+    - Ensure the content, such as "No Syntax Errors Found", is in normal font (Times New Roman).
+    - Maintain consistent font styles for all headings and content.
+ 
 The Code:
 {code_content}
 """
@@ -100,6 +93,7 @@ The Code:
         return response.text.strip()  
     except Exception as e:
         return f"Error generating review: {str(e)}"
+
 
 def review_python_files_in_directory(directory_path):
     """Reviews all Python files in the specified directory and its subdirectories."""
@@ -129,7 +123,7 @@ def review_python_files_in_directory(directory_path):
     return "\n".join(reviews)  
 
 def main():
-    directory_path = input("Enter the directory path containing Python files: ")
+    directory_path = r"C:\Users\User\OneDrive - BILVANTIS TECHNOLOGIES PRIVATE LIMITED\Desktop\Devops\VertexAI\test files"
 
     if not os.path.exists(directory_path):
         print("The specified directory does not exist.")
@@ -162,7 +156,7 @@ def main():
         </html>
         """)
 
-    print(f"Total Time Taken for Reviewing All Files: {overall_elapsed_time:.2f} seconds")
+    print(f"Total Time Taken for Reviewing all Files: {overall_elapsed_time:.2f} seconds")
     
 if __name__ == "__main__":
     main()
