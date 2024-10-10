@@ -25,34 +25,34 @@ def generate_review(code_py,filename):
     start_time = time.time()
     prompt = f"""
 
-        you are an python expert.   
+you are an python expert.   
 Please analyze the provided code snippet and provide the following information:
 1. ** Syntax Errors :**
     - ** Identification **: Identify the exact error-causing line numbers and provide the exact syntax errors.
     - ** Explanation **: Provide a clear and concise explanation of each error.
     - ** Fix **: Suggest a specific fix for each identified error, providing only the necessary code to correct it without rewriting the entire code.
     - ** Note **: If no syntax errors are found, simply state "No Syntax Errors Found."
-    - ** highlight  the word SYNTAX ERROR
+    - ** highlight  the word Syntax Errors
  
 2. ** Code Bugs :**
     - ** Identification **: Identify potential logical or runtime errors in the code.
     - ** Explanation **: Provide a detailed explanation of why the identified code segment is problematic.
     - ** Fix **: Suggest the necessary code changes to fix the bugs without rewriting the entire code.
     - ** Note **: If no code bugs found, simply state "No Code Bugs Found."
-    - ** highlight the word CODE BUGS
- 
+    - ** highlight the word Code Bugs
+
 3. ** Security Vulnerabilities :**
     - ** Identification **: Highlight any potential security vulnerabilities in the code (e.g., SQL injection, XSS, insecure deserialization).
     - ** Explanation **: Provide a clear explanation of each identified vulnerability.
     - ** Fix **: Suggest code changes to mitigate the security risks without rewriting the entire code.
     - ** Note **: If no security vulnerabilities are found, simply state "No Security Vulnerabilities Found."
-    - ** highlight the word SECURITY VULNERABITIES
+    - ** highlight the word Security Vulnerabilities
  
 4. ** Duplicate Code :**
     - ** Identification **: Highlight sections of the code lines that are duplicated.
     - ** Suggestion **: Provide recommendations without rewriting the entire code.
     - ** Note **: If no code duplicate code is found, simply state "No duplicate code in this file."
-    - ** highlight the word DUPLICATE CODE
+    - ** highlight the word Duplicate Code
  
 5. ** Code Improvement Suggestions :**
     - ** Identification **: Highlight sections of the code that can be improved.
@@ -62,17 +62,17 @@ Please analyze the provided code snippet and provide the following information:
         - Potential for using more concise constructs (e.g., list comprehensions, loops)
     - ** Suggestion **: Provide specific points for improvement and the necessary code changes without rewriting the entire code.
     - ** Note **: If no code improvement suggestions are found, simply state "No Code Improvement Suggestions Found."
-    - ** highlight the word CODE IMPROVEMENTS
+    - ** highlight the word Code Improvement Suggestions
 
 6. ** Don't write any kind of code or code snippet in the output: **
 
 7.Generate the output in a purely HTML format so that the file can be opened and displayed as a proper web page.
   - Maintain a consistent format for all review responses.
-  - Clearly separate review responses for each file:
-      - Each file's review should be in a distinct section, easily identifiable with proper headings and spacing.
+  - Each file's review should be in a distinct section, easily identifiable with proper headings and spacing.
   - Table Format: Structure the content in tables with the following specifications:
-      - Use appropriate column names such as "Identification," "Explanation," and "Fix" (or relevant headers based on the context).
-      - Populate the rows with detailed content corresponding to each header.
+  - Use appropriate column names such as "Identification," "Explanation," and "Fix" (or relevant headers based on the context).
+  - Populate the rows with detailed content corresponding to each header.
+  - do not use any green colour in the html and css content.
 **The Code:**
 {code_py}
 
@@ -90,11 +90,11 @@ Please analyze the provided code snippet and provide the following information:
             }
         )
         end_time = time.time()
-        print(f"total time taken for {filename}:  {end_time-start_time}")
+        print(f"total time taken for {filename}:  {round(end_time - start_time, 3)} seconds")
         return response.text
     except Exception as e:
         end_time = time.time()
-        print(f"total time taken for {filename}:  {end_time-start_time}")
+        print(f"total time taken for {filename}:  {round(end_time - start_time, 3)} seconds")
         return f"Error generating review: {str(e)}"
      
 def main(content,filename,file_path):
@@ -106,7 +106,7 @@ def main(content,filename,file_path):
     # Write a heading
         output_file.write(f"""
         <div style='border: 2px solid #3498db; padding: 20px; margin: 20px 0; border-radius: 5px; background-color: #ecf0f1;'>
-            <p style='font-family:verdana; font-size: 25px; color: blue;'>
+            <p style='font-family:verdana; font-size: 25px; color: black'>
                 <strong>Code Review Report for <strong>{filename}</strong>
             </p>
             <p style='font-family:verdana; font-size: 18px; color: #34495e;'>
