@@ -80,59 +80,63 @@ def generate_review(filename, code_content):
         # Clean the response by removing unnecessary code block markers
         table_response = table_response.replace("```html", "").replace("```", "").strip()
 
-        # Check if the response has the expected structure and contains the table header
+        # Initialize issue categories to group the issues
+        issues_grouped = {
+            "Syntax Error": [],
+            "Code Bug": [],
+            "Security Vulnerability": [],
+            "Code Improvement Suggestion": [],
+            "Duplicate Code": []
+        }
+
+        # Parse the response and categorize the issues
         if "| Line Number" in table_response:
             table_response = table_response.replace("|", "").replace("---", "").replace("# Python Code Analysis", "").strip()
-            
-            # Wrap the table in proper HTML tags
-            table_html = """
-            <table border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse;">
-                <thead>
-                    <tr>
-                        <th>Line Number</th>
-                        <th>Issue Type</th>
-                        <th>Explanation</th>
-                        <th>Fix</th>
-                    </tr>
-                </thead>
-                <tbody>
-            """
             
             for line in table_response.splitlines():
                 parts = line.split("  ")
                 if len(parts) == 4:  # Check if there are 4 parts (Line Number, Issue Type, Explanation, Fix)
-                    table_html += f"""
-                    <tr>
-                        <td>{parts[0].strip()}</td>
-                        <td>{parts[1].strip()}</td>
-                        <td>{parts[2].strip()}</td>
-                        <td>{parts[3].strip()}</td>
-                    </tr>
-                    """
+                    issue_type = parts[1].strip()
+                    if issue_type in issues_grouped:
+                        issues_grouped[issue_type].append(parts)
             
-            table_html += "</tbody></table>"
+            # Generate the HTML tables for each issue category
+            table_html = ""
+            for issue_type, issues in issues_grouped.items():
+                if issues:
+                    table_html += f"<h3>{issue_type}</h3>"
+                    table_html += """
+                    <table border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th>Line Number</th>
+                                <th>Issue Type</th>
+                                <th>Explanation</th>
+                                <th>Fix</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                    """
+                    for issue in issues:
+                        table_html += f"""
+                        <tr>
+                            <td>{issue[0].strip()}</td>
+                            <td>{issue[1].strip()}</td>
+                            <td>{issue[2].strip()}</td>
+                            <td>{issue[3].strip()}</td>
+                        </tr>
+                        """
+                    table_html += "</tbody></table>"
             return table_html
         else:
-            # If no issues were found, return a table with NA values
+            # If no issues were found, return a table row with NA values
             return """
-            <table border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse;">
-                <thead>
-                    <tr>
-                        <th>Line Number</th>
-                        <th>Issue Type</th>
-                        <th>Explanation</th>
-                        <th>Fix</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>NA</td>
-                        <td>NA</td>
-                        <td>NA</td>
-                        <td>NA</td>
-                    </tr>
-                </tbody>
-            </table>
+            <tr>
+                <td>NA</td>
+                <td>NA</td>
+                <td>NA</td>
+                <td>NA</td>
+            </tr>
             """
         
     except Exception as e:
