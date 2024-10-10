@@ -5,7 +5,7 @@ import time
 
 GOOGLE_APPLICATION_CREDENTIALS = "service.json"
 PROJECT_ID = "cedar-context-433909-d9"
-LOCATION = "us-central1"
+LOCATION = "europe-west4"
 GENERATIVE_MODEL_NAME = "gemini-1.5-flash-001"
 RESPONSE_DIR = "responses/" 
 RESPONSE_FILE = os.path.join(RESPONSE_DIR, "review_summary.html") 
@@ -18,127 +18,76 @@ vertexai.init(project=PROJECT_ID, location=LOCATION)
 model = GenerativeModel(GENERATIVE_MODEL_NAME)
 
 def read_file_content(file_path):
-    """Reads the content of a file."""
     if os.path.exists(file_path):
         with open(file_path, 'r') as file:
             return file.read()
     return None
 
 def add_line_numbers(code_content):
-    """Adds line numbers to each line of the code content."""
     lines = code_content.split('\n')
     numbered_lines = [f"Line {i + 1}: {line}" for i, line in enumerate(lines)]
     return '\n'.join(numbered_lines)
 
 def generate_review(code_content):
-    """Generates a review using the Vertex AI model."""
-    prompt = f"""You are a code analysis assistant. Analyze the provided code snippet and provide the following information:
+    prompt = f"""You are an intelligent python and sql code analyst. Please analyze the provided code snippet and provide the following information:
  
 1. Syntax Errors:
-   - Identify the exact error-causing line numbers and provide the exact syntax errors.
-   - Provide a clear and concise explanation of each error.
-   - Suggest a specific fix for each identified error, describing the necessary changes without writing any code.
+    - Identification: Identify the exact error-causing line numbers and provide the exact syntax errors.
+    - Explanation: Provide a clear and concise explanation of each error.
+    - Fix: Suggest a specific fix for each identified error, providing only the necessary code to correct it without rewriting the entire code.
+    - Note: If no syntax errors are found, generate a table with "No Syntax Errors Found" in normal font (Times New Roman).
  
 2. Code Bugs:
-   - Identify potential logical or runtime errors in the code.
-   - Provide a detailed explanation of why the identified code segment is problematic.
-   - Suggest the necessary changes to fix the bugs without writing any code.
+    - Identification: Identify potential logical or runtime errors in the code.
+    - Explanation: Provide a detailed explanation of why the identified code segment is problematic.
+    - Fix: Suggest the necessary code changes to fix the bugs without rewriting the entire code.
+    - Note: If no code bugs are found, generate a table with "No Code Bugs Found" in normal font (Times New Roman).
  
 3. Security Vulnerabilities:
-   - Highlight any potential security vulnerabilities in the code (e.g., SQL injection, XSS, insecure deserialization).
-   - Provide a clear explanation of each identified vulnerability.
-   - Suggest changes to mitigate the security risks without writing any code.
+    - Identification: Highlight any potential security vulnerabilities in the code (e.g., SQL injection, XSS, insecure deserialization).
+    - Explanation: Provide a clear explanation of each identified vulnerability.
+    - Fix: Suggest code changes to mitigate the security risks without rewriting the entire code.
+    - Note: If no security vulnerabilities are found, generate a table with "No Security Vulnerabilities Found" in normal font (Times New Roman).
  
 4. Duplicate Code:
-   - Highlight sections of the code lines that are duplicated.
-   - Provide recommendations for reducing duplication without writing any code.
+    - Identification: Highlight sections of the code lines that are duplicated.
+    - Suggestion: Provide recommendations without rewriting the entire code.
+    - Note: If no duplicate code is found, generate a table with "No duplicate code in this file" in normal font (Times New Roman).
  
 5. Code Improvement Suggestions:
-   - Highlight sections of the code that can be improved.
-     This could include:
-     - Unnecessary complexity
-     - Redundant code blocks
-     - Potential for using more concise constructs (e.g., list comprehensions, loops)
-   - Provide specific points for improvement and describe the necessary changes without writing any code.
-   - If no code improvement suggestions are found, state "No Code Improvement Suggestions Found."
-6.Generate the output in a purely HTML format so that the file can be opened and displayed as a proper web page.
-     - Maintain a consistent format for all review responses.
-     - Use CSS for styling (not too light or too bright colors)
-     - Clearly separate review responses for each file:
-     - Each file's review should be in a distinct section, easily identifiable with proper headings and spacing.
-     - Table Format: Structure the content in tables with the following specifications:
-     - Use appropriate column names such as "Identification," "Explanation," and "Fix" (or relevant headers based on the context).
-     - Populate the rows with detailed content corresponding to each header.
-Important: Do not write any kind of code or code snippet in your output. Describe the necessary changes or improvements without providing actual code.
+    - Identification: Highlight sections of the code that can be improved.
+        - This could include:
+        - Unnecessary complexity
+        - Redundant code blocks
+        - Potential for using more concise constructs (e.g., list comprehensions, loops)
+    - Suggestion: Provide specific points for improvement and the necessary code changes without rewriting the entire code.
+    - Note: If no code improvement suggestions are found, generate a table with "No Code Improvement Suggestions Found" in normal font (Times New Roman).
  
-Present your analysis in a structured HTML format with basic styling. Use appropriate headings, lists, and paragraphs to organize the information. Here's an example of how you might structure your response:
+6. Don't write any kind of code or code snippet in the output.
  
-<answer>
-<html>
-<head>
-<style>
-body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-h1 {{  }}
-h2 {{}}
-.error, .bug, .vulnerability {{  }}
-.duplicate, .improvement {{ }}
-</style>
-</head>
-<body>
-<h1>Code Analysis Report</h1>
+7. Generate the output in a purely HTML format so that the file can be opened and displayed as a proper web page.
+    - Maintain a consistent format for all review responses.
+    - Ensure there is no "Code analysis" headings in the final output.
+    - Ensure a table is always generated for every section, even if there are no errors or suggestions.
+    - Enforce table formatting using inline attributes:
+        - The table width should always be set to 100%.
+        - Use inline HTML attributes for consistent formatting:
+            - `<table width="100%" border="1" cellpadding="8" style="border-collapse: collapse;">`
+            - For each column:
+                - `<th width="25%">Identification</th>`
+                - `<th width="50%">Explanation</th>`
+                - `<th width="25%">Fix</th>`
+            - Apply consistent borders and alignment.
+            - Ensure proper font and alignment (Times New Roman for text, left-aligned).
  
-<h2>1. Syntax Errors</h2>
-<ul>
-<li class="error">
-<strong>Line X:</strong> [Description of the syntax error]
-<p><em>Explanation:</em> [Clear and concise explanation of the error]</p>
-<p><em>Fix:</em> [Suggestion for fixing the error without writing code]</p>
-</li>
-</ul>
- 
-<h2>2. Code Bugs</h2>
-<ul>
-<li class="bug">
-<strong>Issue:</strong> [Description of the logical or runtime error]
-<p><em>Explanation:</em> [Detailed explanation of why this is problematic]</p>
-<p><em>Fix:</em> [Suggestion for fixing the bug without writing code]</p>
-</li>
-</ul>
- 
-<h2>3. Security Vulnerabilities</h2>
-<ul>
-<li class="vulnerability">
-<strong>Vulnerability:</strong> [Description of the security vulnerability]
-<p><em>Explanation:</em> [Clear explanation of the vulnerability]</p>
-<p><em>Mitigation:</em> [Suggestion for mitigating the risk without writing code]</p>
-</li>
-</ul>
- 
-<h2>4. Duplicate Code</h2>
-<ul>
-<li class="duplicate">
-<strong>Duplication:</strong> [Description of the duplicated code sections]
-<p><em>Recommendation:</em> [Suggestion for reducing duplication without writing code]</p>
-</li>
-</ul>
- 
-<h2>5. Code Improvement Suggestions</h2>
-<ul>
-<li class="improvement">
-<strong>Improvement:</strong> [Description of the code section that can be improved]
-<p><em>Suggestion:</em> [Specific points for improvement without writing code]</p>
-</li>
-</ul>
- 
-</body>
-</html>
-</answer>
- 
-Remember to adapt this structure based on your findings, and ensure that you do not include any actual code in your response.
-    
+8. Headings like Syntax Errors, Code Bugs, Security Vulnerabilities, Duplicate Code, and Code Improvement Suggestions must be bold and numbered.
+    - Ensure the content, such as "No Syntax Errors Found," is in normal font (Times New Roman).
+    - Keep headings and content in distinct fonts.
+    - Use a `-` to fill the "Explanation" and "Fix" columns when there are no issues to display.
 The Code:
 {code_content}
-""" 
+"""
+ 
     try:
         response = model.generate_content(
             prompt,
@@ -157,11 +106,16 @@ def review_python_files_in_directory(directory_path):
     reviews = []  
     for root, _, files in os.walk(directory_path):  
         for filename in files:
-            if filename.endswith('.py'):
+            if filename.endswith('.py') or filename.endswith('.sql'):
                 file_path = os.path.join(root, filename)
+                start_time = time.time() 
+
                 code_content = read_file_content(file_path)
                 numbered_code = add_line_numbers(code_content)
                 review = generate_review(numbered_code)
+
+                elapsed_time = time.time() - start_time  
+                print(f"Time taken to review {filename}: {elapsed_time:.2f} seconds")  
 
                 reviews.append(f"""
                 <div style="margin-bottom: 20px; border: 1px solid #ccc; padding: 15px; border-radius: 8px; background-color: #f9f9f9;">
@@ -181,11 +135,11 @@ def main():
         print("The specified directory does not exist.")
         return
 
-    start_time = time.time()
+    overall_start_time = time.time()
 
     reviews_html = review_python_files_in_directory(directory_path)
 
-    elapsed_time = time.time() - start_time
+    overall_elapsed_time = time.time() - overall_start_time
 
     with open(RESPONSE_FILE, 'w') as output_file:
         output_file.write(f"""
@@ -208,7 +162,7 @@ def main():
         </html>
         """)
 
-    print(f"Total Time Taken for Review: {elapsed_time:.2f} seconds")
+    print(f"Total Time Taken for Reviewing All Files: {overall_elapsed_time:.2f} seconds")
     
 if __name__ == "__main__":
     main()
