@@ -4,9 +4,11 @@ variable "project_id" {
 }
 
 locals {
-  parts = split("-", var.project_id)
-  middle_parts = slice(local.parts, 1, 3)
+  trimmed_project_id = substr(var.project_id, 4, length(var.project_id) - 4)
+  parts = split("-", local.trimmed_project_id)
+  middle_parts = slice(local.parts, 0, length(local.parts) - 1)
   formatted_middle = join("-", local.middle_parts)
+
   environment_mapping = {
     "dev" = "development"
   }
@@ -14,5 +16,5 @@ locals {
 
 output "formatted_project_name" {
   description = "Formatted project name"
-  value       = "${local.formatted_middle}-${lookup(local.environment_mapping, local.parts[3], local.parts[3])}"
+  value       = "${local.formatted_middle}-${lookup(local.environment_mapping, local.parts[length(local.parts) - 1], local.parts[length(local.parts) - 1])}"
 }
