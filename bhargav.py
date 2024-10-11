@@ -1,187 +1,140 @@
 import os
+import time
 import vertexai
 from vertexai.generative_models import GenerativeModel
 
-# Configuration
 GOOGLE_APPLICATION_CREDENTIALS = "service.json"
 PROJECT_ID = "cedar-context-433909-d9"
 LOCATION = "us-central1"
 GENERATIVE_MODEL_NAME = "gemini-1.5-flash-001"
-INPUT_DIRECTORY = "pythonreview"  # Directory containing Python files
-OUTPUT_FILE = "detailed_python_review_report.html"  # Output HTML file
+directory_path = "pythonreview"
+OUTPUT_FILE = "python_review.html"
 
-# Set up Google Cloud credentials and initialize Vertex AI
+
+# Set Google Cloud credentials and initialize Vertex AI
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GOOGLE_APPLICATION_CREDENTIALS
 vertexai.init(project=PROJECT_ID, location=LOCATION)
-
+ 
 # Initialize the Generative Model
 model = GenerativeModel(GENERATIVE_MODEL_NAME)
-
-def read_file_content(file_path):
-    """Reads the content of the Python file."""
-    with open(file_path, 'r') as file:
-        return file.read()
-
-def generate_review(filename, code_content):
-    """Generates a detailed review of the provided code using the AI model."""
+ 
+def error_refer(code_py):
+    lines = code_py.split('\n')
+    numbered_lines = [f"Line {i + 1}: {line}" for i, line in enumerate(lines)]
+    return '\n'.join(numbered_lines)
+ 
+def generate_review(code_py,filename):
+    start_time = time.time()
     prompt = f"""
-    Hi vertexai, you are an expert in Python code analysis. Please review the following Python code for various issues:
-    
-    1. **Syntax Errors**:
-        - **Identification**: Identify the exact error-causing line numbers and provide the exact syntax errors.
-        - **Explanation**: Provide a clear and concise explanation of each error.
-        - **Fix**: Suggest a specific fix for each identified error, providing only the necessary code to correct it without rewriting the entire code.
-        
-    2. **Code Bugs**:
-        - **Identification**: Identify potential logical or runtime errors in the code.
-        - **Explanation**: Provide a detailed explanation of why the identified code segment is problematic.
-        - **Fix**: Suggest the necessary code changes to fix the bugs without rewriting the entire code.
-    
-    3. **Security Vulnerabilities**:
-        - **Identification**: Highlight any potential security vulnerabilities in the code.
-        - **Explanation**: Provide a clear explanation of each identified vulnerability.
-        - **Fix**: Suggest code changes to mitigate the security risks without rewriting the entire code.
-    
-    4. **Duplicate Code**:
-        - **Identification**: Highlight sections of the code lines that are duplicated.
-        - **Suggestion**: Provide recommendations to remove redundancy without rewriting the entire code.
-    
-    5. **Code Improvement Suggestions**:
-        - **Identification**: Highlight sections of the code that can be improved (e.g., unnecessary complexity, redundant code).
-        - **Suggestion**: Provide specific points for improvement and the necessary code changes without rewriting the entire code.
-    
-    Provide the response in HTML table format for each section with the following columns:
-        - Line Number
-        - Issue Type
-        - Explanation
-        - Fix
-        
-    The Python code to review is from the file: {filename}.
-    
-    **Code**:
-    {code_content}
+  you are an python expert.   
+Please analyze the provided code snippet and provide the following information:
+1. ** Syntax Errors :**
+    - ** Identification **: Identify the exact error-causing line numbers and provide the exact syntax errors.
+    - ** Explanation **: Provide a clear and concise explanation of each error.
+    - ** Fix **: Suggest a specific fix for each identified error, providing only the necessary code to correct it without rewriting the entire code.
+    - ** Note **: If no syntax errors are found, simply state "No Syntax Errors Found."
+    - ** highlight  the word Syntax Errors
+ 
+2. ** Code Bugs :**
+    - ** Identification **: Identify potential logical or runtime errors in the code.
+    - ** Explanation **: Provide a detailed explanation of why the identified code segment is problematic.
+    - ** Fix **: Suggest the necessary code changes to fix the bugs without rewriting the entire code.
+    - ** Note **: If no code bugs found, simply state "No Code Bugs Found."
+    - ** highlight the word Code Bugs
+
+3. ** Security Vulnerabilities :**
+    - ** Identification **: Highlight any potential security vulnerabilities in the code (e.g., SQL injection, XSS, insecure deserialization).
+    - ** Explanation **: Provide a clear explanation of each identified vulnerability.
+    - ** Fix **: Suggest code changes to mitigate the security risks without rewriting the entire code.
+    - ** Note **: If no security vulnerabilities are found, simply state "No Security Vulnerabilities Found."
+    - ** highlight the word Security Vulnerabilities
+ 
+4. ** Duplicate Code :**
+    - ** Identification **: Highlight sections of the code lines that are duplicated.
+    - ** Suggestion **: Provide recommendations without rewriting the entire code.
+    - ** Note **: If no code duplicate code is found, simply state "No duplicate code in this file."
+    - ** highlight the word Duplicate Code
+ 
+5. ** Code Improvement Suggestions :**
+    - ** Identification **: Highlight sections of the code that can be improved.
+        - This could include:
+        - Unnecessary complexity
+        - Redundant code blocks
+        - Potential for using more concise constructs (e.g., list comprehensions, loops)
+    - ** Suggestion **: Provide specific points for improvement and the necessary code changes without rewriting the entire code.
+    - ** Note **: If no code improvement suggestions are found, simply state "No Code Improvement Suggestions Found."
+    - ** highlight the word Code Improvement Suggestions
+
+6. ** Don't write any kind of code or code snippet in the output: **
+
+7.Generate the output in a purely HTML format so that the file can be opened and displayed as a proper web page.
+  - Maintain a consistent format for all review responses.
+  - Each file's review should be in a distinct section, easily identifiable with proper headings and spacing.
+  - Table Format: Structure the content in tables with the following specifications:
+  - Use appropriate column names such as "Identification," "Explanation," and "Fix" (or relevant headers based on the context).
+  - Populate the rows with detailed content corresponding to each header.
+  - ensure that there is no background color for all the tables(remove green color)
+**The Code:**
+{code_py}
+
     """
-    
+ 
     try:
         response = model.generate_content(
             prompt,
             generation_config={
-                "max_output_tokens": 7000,
-                "temperature": 0.3,
+                "max_output_tokens": 8192,
+                "temperature": 0.2,
                 "top_p": 0.95,
             }
         )
-        
-        table_response = response.text.strip()
-        
-        # Log the raw response for debugging
-        print(f"Raw response for {filename}:\n{table_response}\n")
-
-        # Clean the response by removing unnecessary code block markers
-        table_response = table_response.replace("```html", "").replace("```", "").strip()
-
-        # Initialize issue categories to group the issues
-        issues_grouped = {
-            "Syntax Error": [],
-            "Code Bug": [],
-            "Security Vulnerability": [],
-            "Code Improvement Suggestion": [],
-            "Duplicate Code": []
-        }
-
-        # Parse the response and categorize the issues
-        if "| Line Number" in table_response:
-            table_response = table_response.replace("|", "").replace("---", "").replace("# Python Code Analysis", "").strip()
-            
-            for line in table_response.splitlines():
-                parts = line.split("  ")
-                if len(parts) == 4:  # Check if there are 4 parts (Line Number, Issue Type, Explanation, Fix)
-                    issue_type = parts[1].strip()
-                    if issue_type in issues_grouped:
-                        issues_grouped[issue_type].append(parts)
-            
-            # Generate the HTML tables for each issue category
-            table_html = ""
-            for issue_type, issues in issues_grouped.items():
-                if issues:
-                    table_html += f"<h3>{issue_type}</h3>"
-                    table_html += """
-                    <table border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse;">
-                        <thead>
-                            <tr>
-                                <th>Line Number</th>
-                                <th>Issue Type</th>
-                                <th>Explanation</th>
-                                <th>Fix</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                    """
-                    for issue in issues:
-                        table_html += f"""
-                        <tr>
-                            <td>{issue[0].strip()}</td>
-                            <td>{issue[1].strip()}</td>
-                            <td>{issue[2].strip()}</td>
-                            <td>{issue[3].strip()}</td>
-                        </tr>
-                        """
-                    table_html += "</tbody></table>"
-            return table_html
-        else:
-            # If no issues were found, return a table row with NA values
-            return """
-            <tr>
-                <td>NA</td>
-                <td>NA</td>
-                <td>NA</td>
-                <td>NA</td>
-            </tr>
-            """
-        
+        end_time = time.time()
+        print(f"total time taken for {filename}:  {round(end_time - start_time, 3)} seconds")
+        return response.text
     except Exception as e:
+        end_time = time.time()
+        print(f"total time taken for {filename}:  {round(end_time - start_time, 3)} seconds")
         return f"Error generating review: {str(e)}"
+     
+def main(content,filename,file_path):
+    numbered_code = error_refer(content)    
+    review = generate_review(numbered_code,filename)
+    filename=f"{filename}.html"
+    # Write the review to the output file
+    with open(OUTPUT_FILE, 'a') as output_file:
+    # Write a heading
+        output_file.write(f"""
+        <div style='border: 2px solid #3498db; padding: 20px; margin: 20px 0; border-radius: 5px; background-color: #ecf0f1;'>
+            <p style='font-family:verdana; font-size: 25px; color: black'>
+                <strong>Code Review Report for <strong>{filename}</strong>
+            </p>
+            <p style='font-family:verdana; font-size: 18px; color: #34495e;'>
+             
+            </p>
+            {review}
+        </div>
+        """)
 
-def main():
-    # Initialize the HTML report
-    html_report = """
-    <html>
-    <head>
-        <style>
-            body { font-family: Arial, sans-serif; }
-            table { width: 100%; border-collapse: collapse; }
-            th, td { padding: 8px; text-align: left; border: 1px solid #ddd; }
-            th { background-color: #f2f2f2; }
-            table + table { margin-top: 10px; }
-        </style>
-    </head>
-    <body>
-    """
+def read_file_content(file_path):
+    """Reads the content of the file."""
+    with open(file_path, 'r') as file:
+        return file.read()
 
-    # Process each Python file in the specified directory
-    for filename in os.listdir(INPUT_DIRECTORY):
-        if filename.endswith('.py'):
-            file_path = os.path.join(INPUT_DIRECTORY, filename)
-            try:
-                # Read content of the file and generate the review
-                code_content = read_file_content(file_path)
-                review_html = generate_review(filename, code_content)
-                
-                # Add file name and review to the report
-                html_report += f"<h2>Review for {filename}</h2>{review_html}"
-            except Exception as e:
-                html_report += f"<h2>Review for {filename} failed</h2><p>{str(e)}</p>"
+def read_files_in_directory(directory_path):
+    """Reads all Python files in the given directory."""
+    # List to store content of each file
     
-    # Close the HTML tags
-    html_report += "</body></html>"
+    
+    # Loop through each file in the directory
+    for filename in os.listdir(directory_path):
+        # Check if the file is a Python file
+        if filename.endswith('.py'):
+            file_path = os.path.join(directory_path, filename)
+            content = read_file_content(file_path)
+            
+            main(content,filename,file_path)
+           
 
-    try:
-        # Write the combined report to an HTML file
-        with open(OUTPUT_FILE, 'w') as output_file:
-            output_file.write(html_report)
-        print(f"Generated combined report: {OUTPUT_FILE}")
-    except Exception as e:
-        print(f"Error writing the HTML report: {str(e)}")
 
-if __name__ == "__main__":
-    main()
+
+all_files_content = read_files_in_directory(directory_path)
