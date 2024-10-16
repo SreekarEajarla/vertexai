@@ -1,0 +1,26 @@
+ 
+**sample1 vertexai explanation**
+*In this project, we are leveraging Vertex AI to automate code review processes, primarily focusing on Python, SQL, and PySpark files.
+*The system is designed to identify key issues such as syntax errors, code bugs, security vulnerabilities, duplicate code, and potential improvements.
+*Once analyzed, the findings are written into an HTML file, allowing developers to efficiently review and address errors.
+*The use of Vertex AI in this process is intended to reduce manual efforts and streamline the workflow.and also we are utilizing Vertex AI to create an automated and efficient code review pipeline.
+*Compared to SonarQube, Vertex AI offers advantages in cost optimization and accuracy, making it a more effective solution for our specific needs.
+*Overall, the use of Vertex AI in this project automates the code review process, enhancing developer productivity, ensuring high code quality, and offering a more cost-effective and accurate alternative to traditional tools like SonarQube.
+ 
+
+
+
+**sample2 vertexai explanation**
+*End-to-End Automated Code Review Using Vertex AI:
+*This script showcases how you can leverage Vertex AI for fully automated code reviews. The system scans through Python files within a directory, analyzing their content for:
+*Syntax errors,
+*Code bugs,
+*Security vulnerabilities,
+*Duplicate code, and
+*Code improvement suggestions.
+*All identified issues are summarized into structured HTML reports and plain text files, which are formatted for easy review by developers. This automation reduces manual code inspection efforts and helps developers focus on fixing the errors rather than finding them.
+*The script generates detailed, structured HTML output that is visually organized using tables and clear headings. It presents each file's review in a section with appropriate numbering, headings, and descriptive content.
+*The report includes detailed explanations and suggested fixes for each type of error, making it highly valuable for developers. Additionally, the customization ensures the report format is consistent and easy to interpret, enhancing the code review process.
+*The solution is designed with time efficiency in mind. By utilizing Vertex AI's generative capabilities, the script analyzes files quickly and provides immediate feedback. For each file processed, the total time taken is displayed, showcasing the speed and responsiveness of the system.
+*Additionally, the script can easily scale to handle multiple Python files from an entire directory, making it adaptable to larger codebases or projects. This scalability allows it to be integrated into continuous integration pipelines, streamlining the code review process across different environments and teams.
+ 
