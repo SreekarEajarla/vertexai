@@ -177,7 +177,6 @@ def append_to_output_file(content, file_name, file_path, time_taken):
 def main():
     """Main function to run code reviews automatically for Python and SQL files."""
     path = "C:\\vertexai_task\\pyfiles"
-    os.chdir(path)
     total_time = 0  # To keep track of the total time for all files
 
     def read_and_review_file(file_path, file_name, file_type):
