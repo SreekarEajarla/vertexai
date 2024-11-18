@@ -43,18 +43,18 @@ def generate_review(code_content):
     - Identification: Identify potential logical or runtime errors in the code.
     - Explanation: Provide a detailed explanation of why the identified code segment is problematic.
     - Fix: Suggest the necessary code changes to fix the bugs without rewriting the entire code.
-    - Note: If no code bugs are found, give as "No Code Bugs Found" in normal font (Times New Roman).
+    - Note: If no code bugs are found, generate a table with "No Code Bugs Found" in normal font (Times New Roman).
  
 3. Security Vulnerabilities:
     - Identification: Highlight any potential security vulnerabilities in the code (e.g., SQL injection, XSS, insecure deserialization).
     - Explanation: Provide a clear explanation of each identified vulnerability.
     - Fix: Suggest code changes to mitigate the security risks without rewriting the entire code.
-    - Note: If no security vulnerabilities are found, give as "No Security Vulnerabilities Found" in normal font (Times New Roman).
+    - Note: If no security vulnerabilities are found, generate a table with "No Security Vulnerabilities Found" in normal font (Times New Roman).
  
 4. Duplicate Code:
     - Identification: Highlight sections of the code lines that are duplicated.
     - Suggestion: Provide recommendations without rewriting the entire code.
-    - Note: If no duplicate code is found, give as "No duplicate code in this file" in normal font (Times New Roman).
+    - Note: If no duplicate code is found, generate a table with "No duplicate code in this file" in normal font (Times New Roman).
  
 5. Code Improvement Suggestions:
     - Identification: Highlight sections of the code that can be improved.
@@ -63,22 +63,35 @@ def generate_review(code_content):
         - Redundant code blocks
         - Potential for using more concise constructs (e.g., list comprehensions, loops)
     - Suggestion: Provide specific points for improvement and the necessary code changes without rewriting the entire code.
-    - Note: If no code improvement suggestions are found, give as "No Code Improvement Suggestions Found" in normal font (Times New Roman).
+    - Note: If no code improvement suggestions are found, generate a table with "No Code Improvement Suggestions Found" in normal font (Times New Roman).
  
 6. Do not write any code snippet in the output.
  
 7. Generate the output in purely HTML format with consistent table formatting for each section:
+    - set response table width to 100%
+    - strictly use only the 100% of the page not more than that
+    - strictly do not give any headings for review response of file
+    - ensure there is no "File:Untitled" or "code analysis report" headings in the final output
     - All tables should have:
         - Table width set to 100%.
         - Inline HTML attributes for consistent formatting:
             - `<table width="100%" border="1" cellpadding="8" style="border-collapse: collapse; font-family: 'Times New Roman';">`
             - Adapt column sizes according to the text in it.
             - Ensure the same border, font, and alignment styles are used consistently.
+        - ensure all headings, section headings, content, file names, and paths should be left-aligned and text color is black.
+        - make sure that line number is present in present in identification column itself(no more column containing line numbers)
+        - ensure that Identification, Explanation and Fix are the only column names for Syntax Errors, Code Bugs, Security Vulnerabilities sections and
+          identification, suggestion are the only column names for duplicate code and code improvement suggestions
+           - strictly no other columns are allowed.
  
 8. Headings like "Syntax Errors", "Code Bugs", "Security Vulnerabilities", "Duplicate Code", and "Code Improvement Suggestions" must be bold and numbered.
     - Ensure the content, such as "No Syntax Errors Found", is in normal font (Times New Roman).
     - Maintain consistent font styles for all headings and content.
  
+9. Page Layout:
+   - The page width must be constrained to 100%, ensuring it does not exceed this width.
+   - Use "Overflow-wrap: break-word;" to handle long text gracefully without exceeding the table width.
+   - Ensure all tables fit within this page width, with no overflow beyond the page boundaries.
 The Code:
 {code_content}
 """
