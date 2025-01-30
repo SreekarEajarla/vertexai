@@ -7,7 +7,8 @@ GOOGLE_APPLICATION_CREDENTIALS = "service.json"
 PROJECT_ID = "cedar-context-433909-d9"
 LOCATION = "us-central1"
 GENERATIVE_MODEL_NAME = "gemini-1.5-flash-001"
-IGNORE_FILE_NAME = "ignore.txt"  # Define the ignore file name
+IGNORE_FILE_NAME = "ignore.txt"
+OUTPUT_REPORT_NAME = "code_review_report.html"  # Output HTML file
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GOOGLE_APPLICATION_CREDENTIALS
 vertexai.init(project=PROJECT_ID, location=LOCATION)
@@ -26,10 +27,14 @@ def add_line_numbers(code_content):
 def read_ignore_list(file_path):
     """Reads the ignore list from a file, handling file not found."""
     try:
+        file_path = os.path.abspath(file_path)
         with open(file_path, 'r') as f:
             return [line.strip() for line in f if line.strip()]
     except FileNotFoundError:
         print(f"Warning: {file_path} not found. No issues will be ignored.")
+        return []
+    except Exception as e:
+        print(f"An error occurred while reading the ignore file: {e}")
         return []
 
 def generate_review(code_content, ignore_list):
@@ -81,40 +86,53 @@ Ignore the issues mentioned in the ignore list: {', '.join(ignore_list)}
         return f"Error generating review: {str(e)}"
 
 def review_python_files_in_directory(directory_path, ignore_list):
-    for root, dirs, files in os.walk(directory_path): 
+    all_reviews_html = ""
+    for root, dirs, files in os.walk(directory_path):
         for filename in files:
             if filename.endswith('.py'):
                 file_path = os.path.join(root, filename)
                 code_content = read_file_content(file_path)
                 numbered_code = add_line_numbers(code_content)
                 review = generate_review(numbered_code, ignore_list)
+                
+                all_reviews_html += f"""
+                    <h3>Review for {filename}</h3>
+                    <h4>File Path:</h4>
+                    <p>{file_path}</p>
+                    <h4>Review:</h4>
+                    <pre>{review}</pre>
+                """
+    
+    return all_reviews_html
 
-                output_file_path = os.path.splitext(file_path)[0] + "_review.html"
-                with open(output_file_path, 'w') as output_file:
-                    output_file.write(f"""
-                    <!DOCTYPE html>
-                    <html lang="en">
-                    <head>
-                        <meta charset="UTF-8">
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                        <title>Review for {filename}</title>
-                        <style>
-                            body {{ font-family: Arial, sans-serif; margin: 20px; background-color: #ecf0f1; }}
-                            h1 {{ color: #34495E; }}
-                            pre {{ white-space: pre-wrap; word-wrap: break-word; }}
-                            .error {{ color: red; font-weight: bold; }}
-                            .success {{ color: green; font-weight: bold; }}
-                        </style>
-                    </head>
-                    <body>
-                        <h1>Review for {filename}</h1>
-                        <h3>File Path:</h3>
-                        <p>{file_path}</p>
-                        <h3>Review:</h3>
-                        <pre>{review}</pre>
-                    </body>
-                    </html>
-                    """)
+def generate_final_report(reviews_html):
+   
+    html_content = f"""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Code Review Report</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; margin: 20px; background-color: #ecf0f1; }}
+                h1 {{ color: #34495E; }}
+                h3 {{ color: #34495E; }}
+                h4 {{ color: #34495E; }}
+                pre {{ white-space: pre-wrap; word-wrap: break-word; }}
+                .error {{ color: red; font-weight: bold; }}
+                .success {{ color: green; font-weight: bold; }}
+            </style>
+        </head>
+        <body>
+            <h1>Code Review Report</h1>
+            {reviews_html}
+        </body>
+        </html>
+        """
+    return html_content
+    
+
 
 def main():
     directory_path = input("Enter the directory path containing Python files: ")
@@ -123,16 +141,22 @@ def main():
         print("The specified directory does not exist.")
         return
     
-    ignore_list = read_ignore_list("/path/to/your/ignore.txt")
-
+    ignore_list = read_ignore_list(IGNORE_FILE_NAME)
+    
     start_time = time.time()
+    
+    reviews_html = review_python_files_in_directory(directory_path, ignore_list)
 
-    review_python_files_in_directory(directory_path, ignore_list)
-
-    end_time = time.time() 
+    end_time = time.time()
     elapsed_time = end_time - start_time
+    
+    final_html_content = generate_final_report(reviews_html)
 
+    with open(OUTPUT_REPORT_NAME, 'w') as output_file:
+        output_file.write(final_html_content)
+    
     print(f"Total Time Taken for Review: {elapsed_time:.2f} seconds")
+    print(f"Code review report is saved to {OUTPUT_REPORT_NAME}")
 
 if __name__ == "__main__":
     main()
