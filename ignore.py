@@ -123,7 +123,7 @@ def main():
         print("The specified directory does not exist.")
         return
     
-    ignore_list = read_ignore_list(IGNORE_FILE_NAME)
+    ignore_list = read_ignore_list("/path/to/your/ignore.txt")
 
     start_time = time.time()
 
