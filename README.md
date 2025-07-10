@@ -1,1 +1,1 @@
-curl -X POST 'http://35.200.135.8:5050/app/schema_availability' -H 'accept: application/json' -H 'Content-Type: application/x-www-form-urlencoded' -d 'run_id=123&connection_id=123&validation_type=nodata'
+1
